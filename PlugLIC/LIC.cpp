@@ -60,11 +60,6 @@ class Integrator : public fantom::DataAlgorithm {
   }
 
  private:
-  enum IntegrationMethod { Euler, RungeKutta };
-  static std::unordered_map<std::string, Integrator::IntegrationMethod>
-      integration_method_options;
-
-
   std::vector<Point3> runge_kutta(const Point3& start, double h,
                                   const Evaluator& eval,
                                   size_t max_iter = 1000) {
