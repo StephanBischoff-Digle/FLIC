@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <cstdint>
-
 #include <fantom/algorithm.hpp>
 #include <fantom/datastructures/DomainFactory.hpp>
 #include <fantom/datastructures/Function.hpp>
@@ -9,37 +8,38 @@
 #include <fantom/datastructures/interfaces/Field.hpp>
 #include <fantom/registry/algorithm.hpp>
 
-namespace {
-using Grid3 = fantom::Grid<3>;
-using fantom::Function;
-using fantom::Vector3;
+#include "SimplexNoise.h"
 
-using Evaluator = std::unique_ptr<FieldEvaluator<3UL, Tensor<double, 3>>>;
+namespace {
+using Grid2 = fantom::Grid<2>;
+using fantom::Function;
+using fantom::Vector2;
+
+using Evaluator = std::unique_ptr<FieldEvaluator<2UL, Tensor<double, 2>>>;
 
 class Integrator : public fantom::DataAlgorithm {
  public:
   struct Options : public DataAlgorithm::Options {
     explicit Options(fantom::Options::Control& control)
         : fantom::DataAlgorithm::Options{control} {
-      add<Field<3, Vector3>>("Field", "A 3D vector field",
-                             definedOn<Grid3>(Grid3::Points));
+      add<Field<2, Vector2>>("Field", "A 2D vector field",
+                             definedOn<Grid2>(Grid2::Points));
     }
   };
 
   struct DataOutputs : public DataAlgorithm::DataOutputs {
     explicit DataOutputs(DataAlgorithm::DataOutputs::Control& control)
-        : DataAlgorithm::DataOutputs{control} {
-    }
+        : DataAlgorithm::DataOutputs{control} {}
   };
 
   explicit Integrator(InitData& data) : DataAlgorithm{data} {}
 
   void execute(const Algorithm::Options& options,
                const volatile bool&) override {
-    std::shared_ptr<const Field<3, Vector3>> field =
-        options.get<Field<3, Vector3>>("Field");
-    std::shared_ptr<const Function<Vector3>> function =
-        options.get<Function<Vector3>>("Field");
+    std::shared_ptr<const Field<2, Vector2>> field =
+        options.get<Field<2, Vector2>>("Field");
+    std::shared_ptr<const Function<Vector2>> function =
+        options.get<Function<Vector2>>("Field");
 
     // if there is no input, do nothing
     if (!field) {
@@ -49,22 +49,25 @@ class Integrator : public fantom::DataAlgorithm {
 
     // sanity check that interpolated fields really use the correct grid type.
     // This should never fail
-    std::shared_ptr<const Grid3> grid =
-        std::dynamic_pointer_cast<const Grid<3>>(function->domain());
+    std::shared_ptr<const Grid2> grid =
+        std::dynamic_pointer_cast<const Grid<2>>(function->domain());
     if (!grid) {
       throw std::logic_error("Wrong type of grid!");
     }
 
     // TODO: Implement stuff
-
+    SimplexNoise noise{};
+    for (float x = 0.; x < 10.; x += 0.5) {
+      debugLog() << noise.noise(x, 0.) << std::endl;
+    }
   }
 
  private:
-  std::vector<Point3> runge_kutta(const Point3& start, double h,
+  std::vector<Point2> runge_kutta(const Point2& start, double h,
                                   const Evaluator& eval,
                                   size_t max_iter = 1000) {
-    std::vector<Point3> points{};
-    Point3 current = start;
+    std::vector<Point2> points{};
+    Point2 current = start;
     size_t iterations = 0;
 
     while (iterations < max_iter) {
@@ -101,4 +104,4 @@ class Integrator : public fantom::DataAlgorithm {
 
 AlgorithmRegister<Integrator> dummy("A/LIC", "Line Integral Convolution");
 
-}
+}  // namespace
