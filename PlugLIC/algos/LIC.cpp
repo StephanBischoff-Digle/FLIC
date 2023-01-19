@@ -20,26 +20,20 @@ using Evaluator = std::unique_ptr<FieldEvaluator<2UL, Tensor<double, 2>>>;
 class Integrator : public fantom::DataAlgorithm {
  public:
   struct Options : public DataAlgorithm::Options {
-    explicit Options(fantom::Options::Control& control)
-        : fantom::DataAlgorithm::Options{control} {
-      add<Field<2, Vector2>>("Field", "A 2D vector field",
-                             definedOn<Grid2>(Grid2::Points));
+    explicit Options(fantom::Options::Control& control) : fantom::DataAlgorithm::Options{control} {
+      add<Field<2, Vector2>>("Field", "A 2D vector field", definedOn<Grid2>(Grid2::Points));
     }
   };
 
   struct DataOutputs : public DataAlgorithm::DataOutputs {
-    explicit DataOutputs(DataAlgorithm::DataOutputs::Control& control)
-        : DataAlgorithm::DataOutputs{control} {}
+    explicit DataOutputs(DataAlgorithm::DataOutputs::Control& control) : DataAlgorithm::DataOutputs{control} {}
   };
 
   explicit Integrator(InitData& data) : DataAlgorithm{data} {}
 
-  void execute(const Algorithm::Options& options,
-               const volatile bool&) override {
-    std::shared_ptr<const Field<2, Vector2>> field =
-        options.get<Field<2, Vector2>>("Field");
-    std::shared_ptr<const Function<Vector2>> function =
-        options.get<Function<Vector2>>("Field");
+  void execute(const Algorithm::Options& options, const volatile bool&) override {
+    std::shared_ptr<const Field<2, Vector2>> field = options.get<Field<2, Vector2>>("Field");
+    std::shared_ptr<const Function<Vector2>> function = options.get<Function<Vector2>>("Field");
 
     // if there is no input, do nothing
     if (!field) {
@@ -49,8 +43,7 @@ class Integrator : public fantom::DataAlgorithm {
 
     // sanity check that interpolated fields really use the correct grid type.
     // This should never fail
-    std::shared_ptr<const Grid2> grid =
-        std::dynamic_pointer_cast<const Grid<2>>(function->domain());
+    std::shared_ptr<const Grid2> grid = std::dynamic_pointer_cast<const Grid<2>>(function->domain());
     if (!grid) {
       throw std::logic_error("Wrong type of grid!");
     }
@@ -63,9 +56,7 @@ class Integrator : public fantom::DataAlgorithm {
   }
 
  private:
-  std::vector<Point2> runge_kutta(const Point2& start, double h,
-                                  const Evaluator& eval,
-                                  size_t max_iter = 1000) {
+  std::vector<Point2> runge_kutta(const Point2& start, double h, const Evaluator& eval, size_t max_iter = 1000) {
     std::vector<Point2> points{};
     Point2 current = start;
     size_t iterations = 0;
