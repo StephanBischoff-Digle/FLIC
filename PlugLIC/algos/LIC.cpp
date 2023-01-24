@@ -110,6 +110,6 @@ class Integrator : public fantom::DataAlgorithm {
     }
 };
 
-AlgorithmRegister<Integrator> dummy("A/LIC", "Line Integral Convolution");
+AlgorithmRegister<Integrator> dummy("A/LIC_2", "Line Integral Convolution");
 
 }  // namespace
