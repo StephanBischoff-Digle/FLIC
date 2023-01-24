@@ -67,19 +67,18 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
         PointSetBase::BoundingBox b_box = grid->getBoundingBox();
 
         double dpi = options.get<float>("DPI");
-        float v_scale = .5; // TODO: get max from samples
+        float v_scale = .5;  // TODO: get max from samples
         float arc_length = options.get<float>("Arc Length");
         float z_off = options.get<float>("Z-Offset");
-        
-        size_t t_width =  (b_box[0].second - b_box[0].first) * dpi;
-        size_t t_height = (b_box[1].second - b_box[1].first) * dpi; 
+
+        size_t t_width = (b_box[0].second - b_box[0].first) * dpi;
+        size_t t_height = (b_box[1].second - b_box[1].first) * dpi;
         auto px2world = [&](size_t x, size_t y) {
-            return Point2 {
+            return Point2{
                 b_box[0].first + x / dpi,
                 b_box[1].first + y / dpi,
             };
         };
-
 
         auto evaluator = field->makeEvaluator();
         SimplexNoise noise{};
@@ -112,24 +111,22 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
 
         // Generate 2D Texture
         Size2D texture_size{t_width, t_height};
-        std::shared_ptr<graphics::Texture2D> tex_vec = 
-            system.makeTexture(texture_size, graphics::ColorChannel::RGBA);
+        std::shared_ptr<graphics::Texture2D> tex_vec = system.makeTexture(texture_size, graphics::ColorChannel::RGBA);
         tex_vec->range(Pos2D(0, 0), texture_size, colors);
 
-        std::shared_ptr<graphics::Texture2D> tex_noise = 
-            system.makeTexture(texture_size, graphics::ColorChannel::RGBA);
+        std::shared_ptr<graphics::Texture2D> tex_noise = system.makeTexture(texture_size, graphics::ColorChannel::RGBA);
         tex_noise->range(Pos2D(0, 0), texture_size, noise_c);
 
         // Set Quad vertecies.
         std::vector<PointF<3>> verticesTex(4);
-        verticesTex[0] = PointF<3>(b_box[0].first,  b_box[1].first,  z_off);
-        verticesTex[1] = PointF<3>(b_box[0].second, b_box[1].first,  z_off);
-        verticesTex[2] = PointF<3>(b_box[0].first,  b_box[1].second, z_off);
+        verticesTex[0] = PointF<3>(b_box[0].first, b_box[1].first, z_off);
+        verticesTex[1] = PointF<3>(b_box[0].second, b_box[1].first, z_off);
+        verticesTex[2] = PointF<3>(b_box[0].first, b_box[1].second, z_off);
         verticesTex[3] = PointF<3>(b_box[0].second, b_box[1].second, z_off);
 
         // These are the 3D-TextureCoordinates describing the borders of the
         // Texture.
-        std::vector<PointF<2> > texCoords(4);
+        std::vector<PointF<2>> texCoords(4);
         texCoords[0] = PointF<2>(0.0, 0.0);
         texCoords[1] = PointF<2>(1.0, 0.0);
         texCoords[2] = PointF<2>(0.0, 1.0);
@@ -152,7 +149,7 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
                                      .vertexBuffer("texCoords", system.makeBuffer(texCoords))
                                      .indexBuffer(system.makeIndexBuffer(indicesTex))
                                      .uniform("arc_length", arc_length)
-                                     .uniform("scale", 1/v_scale)
+                                     .uniform("scale", 1 / v_scale)
                                      .texture("inTexVec", tex_vec)
                                      .texture("inTexNoise", tex_noise)
                                      .boundingSphere(bs),
