@@ -9,6 +9,7 @@
 #include <fantom/registry/algorithm.hpp>
 
 #include "SimplexNoise.h"
+#include "CubicInterpolator.h"
 
 namespace {
 using Grid2 = fantom::Grid<2>;
@@ -49,10 +50,26 @@ class Integrator : public fantom::DataAlgorithm {
         }
 
         // TODO: Implement stuff
-        SimplexNoise noise{};
-        for (float x = 0.; x < 10.; x += 0.5) {
-            debugLog() << noise.noise(x, 0.) << std::endl;
+
+        std::vector<LIC::DiffPoint> samples;
+        samples.emplace_back(Vector2 {0., 0.}, Vector2 {1., 1.});
+        samples.emplace_back(Vector2 {1., 0.5}, Vector2 {1., 1.});
+        samples.emplace_back(Vector2 {1., 2.}, Vector2 {0., 1.});
+        samples.emplace_back(Vector2 {0., 1.}, Vector2 {1., 0.});
+
+        LIC::CubicInterpolator ci;
+        auto ps = ci.interpolate(samples, .3);
+
+        debugLog() << "xs = [";
+        for (auto &p : ps) {
+            debugLog() << p[0] << ", ";
         }
+        debugLog() << std::endl;
+        debugLog() << "ys = [";
+        for (auto &p : ps) {
+            debugLog() << p[1] << ", ";
+        }
+        debugLog() << std::endl;
     }
 
    private:
