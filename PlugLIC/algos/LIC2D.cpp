@@ -88,6 +88,8 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
         std::vector<Color> colors(t_width * t_height);
         std::vector<Color> noise_c(t_width * t_height);
 
+        Progress prog(*this, "sampling texture and noise", t_width * t_height);
+
         // Set colors
         for (size_t y = 0; y < t_height; ++y) {
             for (size_t x = 0; x < t_width; ++x) {
@@ -106,6 +108,7 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
                 } else {
                     colors[idx] = Color(.5, .5, 0., 1.);
                 }
+                prog++;
             }
         }
 
