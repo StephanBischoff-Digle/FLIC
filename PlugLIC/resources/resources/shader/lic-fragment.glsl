@@ -21,6 +21,11 @@ void main()
     int n = 0;
     float d = .0001;
 
+    if (length(texture(inTexVec, fragTexCoords).rg) < 0.000001) {
+        out_color = vec4(0.);
+        return;
+    }
+
     // forward integration and convolution
     vec2 s0 = fragTexCoords;
     for (int i = 0; i < arc_length / 2.; ++i) {

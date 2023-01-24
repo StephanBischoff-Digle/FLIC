@@ -28,6 +28,7 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
             add<Field<2, Vector2>>("Field", "A 2D vector field", definedOn<Grid<2>>(Grid<2>::Points));
             add<float>("DPI", "Dots per unit", 1.);
             add<float>("Arc Length", "Lenght of the convolution", 30.);
+            add<float>("Z-Offset", "Z-Offset to fix Z-fighting", 0.);
         }
     };
     struct VisOutputs : public VisAlgorithm::VisOutputs {
@@ -68,6 +69,7 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
         double dpi = options.get<float>("DPI");
         float v_scale = .5; // TODO: get max from samples
         float arc_length = options.get<float>("Arc Length");
+        float z_off = options.get<float>("Z-Offset");
         
         size_t t_width =  (b_box[0].second - b_box[0].first) * dpi;
         size_t t_height = (b_box[1].second - b_box[1].first) * dpi; 
@@ -82,16 +84,18 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
         auto evaluator = field->makeEvaluator();
         SimplexNoise noise{};
 
-        // Generate color vector
-        std::vector<Color> colors;
-        std::vector<Color> noise_c;
+        // Generate textures
+        // NOTE: we could use just one here, merging rg-for the field and b for the noise
+        std::vector<Color> colors(t_width * t_height);
+        std::vector<Color> noise_c(t_width * t_height);
 
         // Set colors
         for (size_t y = 0; y < t_height; ++y) {
             for (size_t x = 0; x < t_width; ++x) {
+                size_t idx = y * t_width + x;
                 auto p = px2world(x, y);
                 float n = std::abs(noise.noise(x, y));
-                noise_c.push_back(Color(n, n, n, 1.));
+                noise_c[idx] = Color(n, n, n, 1.);
                 if (evaluator->reset(p, 0.)) {
                     auto val = evaluator->value();
                     double v_x = *val.begin();
@@ -99,9 +103,9 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
 
                     double r = 0.5 + v_x * v_scale;
                     double g = 0.5 + v_y * v_scale;
-                    colors.emplace_back(r, g, 0., 1.);
+                    colors[idx] = Color(r, g, 0., 1.);
                 } else {
-                    colors.emplace_back(.5, .5, 0., 1.);
+                    colors[idx] = Color(.5, .5, 0., 1.);
                 }
             }
         }
@@ -118,10 +122,10 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
 
         // Set Quad vertecies.
         std::vector<PointF<3>> verticesTex(4);
-        verticesTex[0] = PointF<3>(b_box[0].first,  b_box[1].first, 0.);
-        verticesTex[1] = PointF<3>(b_box[0].second, b_box[1].first, 0.);
-        verticesTex[2] = PointF<3>(b_box[0].first,  b_box[1].second, -0.);
-        verticesTex[3] = PointF<3>(b_box[0].second, b_box[1].second, -0.);
+        verticesTex[0] = PointF<3>(b_box[0].first,  b_box[1].first,  z_off);
+        verticesTex[1] = PointF<3>(b_box[0].second, b_box[1].first,  z_off);
+        verticesTex[2] = PointF<3>(b_box[0].first,  b_box[1].second, z_off);
+        verticesTex[3] = PointF<3>(b_box[0].second, b_box[1].second, z_off);
 
         // These are the 3D-TextureCoordinates describing the borders of the
         // Texture.
