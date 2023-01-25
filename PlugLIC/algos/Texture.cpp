@@ -61,7 +61,7 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
         PointSetBase::BoundingBox test = grid->getBoundingBox();
 
         // Local Resource Path
-        std::string resourcePathLocal = PluginRegistrationService::getInstance().getResourcePath("custom/PlugLIC");
+        std::string resourcePathLocal = PluginRegistrationService::getInstance().getResourcePath("custom/PlugLIC/");
 
         // Draw a circle at cx, cy with radius r and stroke width s
         double r = 50.;

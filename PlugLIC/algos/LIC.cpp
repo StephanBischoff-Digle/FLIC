@@ -56,9 +56,15 @@ class Integrator : public fantom::DataAlgorithm {
         samples.emplace_back(Vector2 {1., 0.5}, Vector2 {1., 1.});
         samples.emplace_back(Vector2 {1., 2.}, Vector2 {0., 1.});
         samples.emplace_back(Vector2 {0., 1.}, Vector2 {1., 0.});
-
+        
         LIC::CubicInterpolator ci;
-        auto ps = ci.interpolate(samples, .3);
+
+        for (int i = 0; i < startpoints.size(); i++){
+
+            auto ps = ci.interpolate(samples, 1.0);
+            lineSet->addline(ps);
+
+        }
 
         debugLog() << "xs = [";
         for (auto &p : ps) {
@@ -70,6 +76,8 @@ class Integrator : public fantom::DataAlgorithm {
             debugLog() << p[1] << ", ";
         }
         debugLog() << std::endl;
+
+
     }
 
    private:
