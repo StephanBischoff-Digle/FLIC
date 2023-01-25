@@ -12,7 +12,7 @@ class StreamlineStore {
 
     /// Adds a new streamline by providing its points.
     /// @param points The points of the streamline
-    void add(std::vector<fantom::Vector2>& points);
+    void add(std::vector<fantom::Vector2> points);
 
     /// Querys the store by streamline id.
     /// @throws out_of_range exception if the id does not correspond to a streamline in the store.

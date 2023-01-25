@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 namespace LIC {
-void StreamlineStore::add(std::vector<fantom::Vector2>& points) {
+void StreamlineStore::add(std::vector<fantom::Vector2> points) {
     auto id = this->streamlines.size();
     this->streamlines.emplace_back(points, id);
 }
