@@ -118,7 +118,24 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
             finalColors.push_back(Color(r, g, b, 1.));
         }
 
-        noiseTexture2D->range(Pos2D(0, 0), noiseTexture_size, finalColors);
+        noiseTexture2D->range(Pos2D(0, 0), noiseTexture_size, noiseColors);
+
+        // Prepare Field Data for Shader
+        // Beforehand: for each Pixel, get vector through evaluator
+        std::vector<PointF<2>> pixelPoints;
+        std::vector<PointF<2>> pixelVectors;
+        auto evaluator = field->makeEvaluator();
+        const ValueArray< Point2 >& points = grid->points();
+        size_t testInt = 0;
+        for (size_t i = 0; i < points.size(); i++){
+            if(evaluator->reset(points[i])){
+
+                Vector2 vectors = evaluator->value();
+                pixelPoints.push_back({float(points[i][0]),float(points[i][1])});
+                pixelVectors.push_back({float(vectors[0]),float(vectors[1])});
+                testInt++;
+            }
+        }
 
         // Set Quad vertecies.
         std::vector<PointF<3>> verticesTex(4);
@@ -144,7 +161,7 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
         indicesTex[4] = 1;
         indicesTex[5] = 3;
 
-        // Setup Rendering stuff
+         // Setup Rendering stuff
         auto bs = graphics::computeBoundingSphere(verticesTex);
         std::shared_ptr<graphics::Drawable> textureDrawable =
             system.makePrimitive(graphics::PrimitiveConfig{graphics::RenderPrimitives::TRIANGLES}
@@ -155,7 +172,7 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
                                      .boundingSphere(bs),
                                  system.makeProgramFromFiles(resourcePathLocal + "shader/texture-vertex.glsl",
                                                              resourcePathLocal + "shader/texture-fragment.glsl"));
-
+/*
         std::shared_ptr<graphics::Drawable> noiseTextureDrawable =
             system.makePrimitive(graphics::PrimitiveConfig{graphics::RenderPrimitives::TRIANGLES}
                                      .vertexBuffer("position", system.makeBuffer(verticesTex))
@@ -165,6 +182,22 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
                                      .boundingSphere(bs),
                                  system.makeProgramFromFiles(resourcePathLocal + "shader/texture-vertex.glsl",
                                                              resourcePathLocal + "shader/texture-fragment.glsl"));
+*/
+
+        std::shared_ptr<graphics::Drawable> noiseTextureDrawable =
+            system.makePrimitive(graphics::PrimitiveConfig{graphics::RenderPrimitives::TRIANGLE_STRIP}
+                                     .vertexBuffer("position", system.makeBuffer(verticesTex))
+                                     .vertexBuffer("texCoords", system.makeBuffer(texCoords))
+                                     .indexBuffer(system.makeIndexBuffer(indicesTex))
+                                     .texture("inTexture", noiseTexture2D)
+                                     .uniform("screenWidth", int(t_width))
+                                     .uniform("screenHeight", int(t_height))
+                                     .vertexBuffer("pixelPoints", system.makeBuffer(pixelPoints))
+                                     .vertexBuffer("pixelVectors", system.makeBuffer(pixelVectors))
+                                     .boundingSphere(bs),
+                                 system.makeProgramFromFiles(resourcePathLocal + "shader/lic.vert.glsl",
+                                                             resourcePathLocal + "shader/lic.frag.glsl"));
+
 
         setGraphics("noiseTextureDrawable", noiseTextureDrawable);
         setGraphics("textureDrawable", textureDrawable);
