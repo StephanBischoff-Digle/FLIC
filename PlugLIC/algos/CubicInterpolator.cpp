@@ -39,21 +39,21 @@ Vector2d CubicInterpolator::interpolate_interval(const CubicInterpolator::Interp
 }
 
 std::vector<double> CubicInterpolator::map_ts(const std::vector<double> &dss,
-                                              const CubicInterpolator::AccDistF &dst) const {
+                                              const CubicInterpolator::AccDistF &adf) const {
     // NOTE: we assume `dss` to be sorted
     std::vector<double> ts;
     size_t i = 0;
     for (auto current_d : dss) {
         // find first distance that exceeds the searched distance value
-        while (dst.d[i] < current_d) {
+        while (adf.d[i] < current_d) {
             i++;
-            if (i == dst.d.size()) return ts;
+            if (i == adf.d.size()) return ts;
         }
 
-        double t0 = dst.t[i - 1];
-        double t1 = dst.t[i];
-        double d_t = (current_d - dst.d[i - 1]) / (dst.d[i] - dst.d[i - 1]);  // inverse lerp
-        double t = t0 * d_t * (t1 - t0);                                      // lerp
+        double t0 = adf.t[i - 1];
+        double t1 = adf.t[i];
+        double d_t = (current_d - adf.d[i - 1]) / (adf.d[i] - adf.d[i - 1]);  // inverse lerp
+        double t = t0 + d_t * (t1 - t0);                                      // lerp
         ts.push_back(t);
     }
     return ts;
