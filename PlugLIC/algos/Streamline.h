@@ -16,17 +16,21 @@ struct LinePoint {
 class Streamline {
    private:
     std::vector<LinePoint> points;  //!< Points on the streamline.
-    size_t id;
+    size_t m_id;
 
    public:
     /// Constructs a streamline from a list of fantom::Vector2.
     /// @param points Sorted list of points on the streamline.
     /// @param id The streamline id for acessing the streamline store
-    explicit Streamline(std::vector<fantom::Vector2> &points, size_t id) : id{id} {
+    explicit Streamline(std::vector<fantom::Vector2> points, size_t id) : m_id{id} {
         std::transform(points.begin(), points.end(), std::back_inserter(this->points), [&](fantom::Vector2 p) {
             return LinePoint{p, id};
         });
     }
+
+    /// Returns the streamline id
+    /// @return the streamline id
+    size_t id() { return this->m_id; }
 
     /// Queries if the `query` is on the Streamline given the precision `eps`.
     /// @param query The point we want to check the Streamline for.
