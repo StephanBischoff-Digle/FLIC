@@ -34,7 +34,8 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
     struct VisOutputs : public VisAlgorithm::VisOutputs {
         VisOutputs(fantom::VisOutputs::Control& control) : VisAlgorithm::VisOutputs(control) {
             addGraphics("LIC");
-            // addGraphics("noiseTextureDrawable");
+            addGraphics("Field");
+            addGraphics("Noise");
         }
     };
 
@@ -146,7 +147,7 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
 
         // Setup Rendering stuff
         auto bs = graphics::computeBoundingSphere(verticesTex);
-        std::shared_ptr<graphics::Drawable> textureDrawable =
+        std::shared_ptr<graphics::Drawable> lic_tex =
             system.makePrimitive(graphics::PrimitiveConfig{graphics::RenderPrimitives::TRIANGLES}
                                      .vertexBuffer("position", system.makeBuffer(verticesTex))
                                      .vertexBuffer("texCoords", system.makeBuffer(texCoords))
@@ -159,7 +160,29 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
                                  system.makeProgramFromFiles(resourcePathLocal + "shader/texture-vertex.glsl",
                                                              resourcePathLocal + "shader/lic-fragment.glsl"));
 
-        setGraphics("LIC", textureDrawable);
+        std::shared_ptr<graphics::Drawable> field_tex =
+            system.makePrimitive(graphics::PrimitiveConfig{graphics::RenderPrimitives::TRIANGLES}
+                                     .vertexBuffer("position", system.makeBuffer(verticesTex))
+                                     .vertexBuffer("texCoords", system.makeBuffer(texCoords))
+                                     .indexBuffer(system.makeIndexBuffer(indicesTex))
+                                     .texture("inTexture", tex_vec)
+                                     .boundingSphere(bs),
+                                 system.makeProgramFromFiles(resourcePathLocal + "shader/texture-vertex.glsl",
+                                                             resourcePathLocal + "shader/texture-fragment.glsl"));
+
+        std::shared_ptr<graphics::Drawable> noise_tex =
+            system.makePrimitive(graphics::PrimitiveConfig{graphics::RenderPrimitives::TRIANGLES}
+                                     .vertexBuffer("position", system.makeBuffer(verticesTex))
+                                     .vertexBuffer("texCoords", system.makeBuffer(texCoords))
+                                     .indexBuffer(system.makeIndexBuffer(indicesTex))
+                                     .texture("inTexture", tex_noise)
+                                     .boundingSphere(bs),
+                                 system.makeProgramFromFiles(resourcePathLocal + "shader/texture-vertex.glsl",
+                                                             resourcePathLocal + "shader/texture-fragment.glsl"));
+
+        setGraphics("LIC", lic_tex);
+        setGraphics("Field", field_tex);
+        setGraphics("Noise", noise_tex);
     }
 };
 
