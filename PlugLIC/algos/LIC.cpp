@@ -11,6 +11,7 @@
 #include "CubicInterpolator.h"
 #include "SimplexNoise.h"
 #include "StreamlineStore.h"
+#include "CoordTransform.h"
 
 namespace {
 using Grid2 = fantom::Grid<2>;
@@ -50,35 +51,31 @@ class Integrator : public fantom::DataAlgorithm {
             throw std::logic_error("Wrong type of grid!");
         }
 
-        // TODO: Implement stuff
 
-        std::vector<LIC::DiffPoint> samples;
-        samples.emplace_back(Vector2 {0., 0.}, Vector2 {1., 1.});
-        samples.emplace_back(Vector2 {1., 0.5}, Vector2 {1., 1.});
-        samples.emplace_back(Vector2 {1., 2.}, Vector2 {0., 1.});
-        samples.emplace_back(Vector2 {0., 1.}, Vector2 {1., 0.});
+        size_t width = 10;
+        size_t height = 10;
+        double dpi = 10.;
 
-        LIC::CubicInterpolator ci;
-        auto ps = ci.interpolate(samples, .025);
-        debugLog() << "Generated " << ps.size() << " points" << std::endl;
+        auto ci = LIC::CubicInterpolator();
 
-        LIC::StreamlineStore sls;
-        sls.add(ps);
+        PointSetBase::BoundingBox b_box = grid->getBoundingBox();
+        LIC::StreamlineStore sls(width, height, LIC::CoordTransform(dpi, b_box));
 
-        auto sl = sls.get(samples[2].p, 0.01);
-        if (sl) {
-            auto conv = sl->request_range(samples[2].p, .3, 0.01);
-            debugLog() << conv.size() << " points in conv" << std::endl;
-            debugLog() << "\n";
-            for (auto &p : conv) {
-                debugLog() << p->point << "\n";
+
+        for (size_t y = 0; y < height; ++y) {
+            for (size_t x = 0; x < width; ++x) {
+                auto sl = sls.get({x, y});
+                if (sl) {
+
+                } else {
+                    // integration
+                    // sls.add(ci.interpolate(runge))
+                    
+                    // convolution
+                }
             }
-            debugLog() << std::endl;
-        } else {
-            debugLog() << "no streamline found" << std::endl;
         }
 
-       
     }
 
    private:
