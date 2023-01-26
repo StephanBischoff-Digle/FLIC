@@ -93,8 +93,7 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
 
         // Generate 2D Texture
         Size2D texture_size{t_width, t_height};
-        std::shared_ptr<graphics::Texture2D> texture2D = 
-            system.makeTexture(texture_size, graphics::ColorChannel::RGBA);
+        std::shared_ptr<graphics::Texture2D> texture2D = system.makeTexture(texture_size, graphics::ColorChannel::RGBA);
         texture2D->range(Pos2D(0, 0), texture_size, colors);
 
         SimplexNoise noise{};
@@ -129,7 +128,7 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
 
         // These are the 3D-TextureCoordinates describing the borders of the
         // Texture.
-        std::vector<PointF<2> > texCoords(4);
+        std::vector<PointF<2>> texCoords(4);
         texCoords[0] = PointF<2>(0.0, 0.0);
         texCoords[1] = PointF<2>(1.0, 0.0);
         texCoords[2] = PointF<2>(0.0, 1.0);
