@@ -40,7 +40,7 @@ std::vector<std::shared_ptr<LinePoint>> Streamline::request_range(const fantom::
     // forward until size is exceeded
     last = pos;
     dist = fantom::norm2(pos->point - (pos + 1)->point);
-    for (auto b = pos + 1; b != this->points.begin() && dist < size2h; b++) {
+    for (auto b = pos + 1; b != this->points.end() && dist < size2h; b++) {
         ps.push_back(std::make_shared<LinePoint>(*b));
         dist += fantom::norm2(b->point - last->point);
         last = b;
