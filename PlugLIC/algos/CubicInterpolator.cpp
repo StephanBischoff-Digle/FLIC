@@ -65,8 +65,8 @@ std::vector<fantom::Vector2> CubicInterpolator::interpolate(const std::vector<Di
     r.emplace_back(line[0].p[0], line[0].p[1]);
 
     // NOTE: Presampling of the curve, such that we can map equally spaced distances into the t-space
-    double dt = 0.025;       //!< This is arbitrary
-    std::vector<double> ts;  //!< We collect the t-values corresponding to each sampled point
+    double dt = 0.025;       // This is arbitrary
+    std::vector<double> ts;  // We collect the t-values corresponding to each sampled point
     for (size_t i = 1; i < line.size(); ++i) {
         CubicInterpolator::InterpolatorInterval iv{line[i - 1], line[i]};
         for (double t = dt; t < 1. + dt; t += dt) {
@@ -85,7 +85,7 @@ std::vector<fantom::Vector2> CubicInterpolator::interpolate(const std::vector<Di
     }
 
     CubicInterpolator::AccDistF dst{ts, ds};
-    std::vector<double> dss;  //!< Will contain the wanted distances that need map-back into t-space
+    std::vector<double> dss;  // Will contain the wanted distances that need map-back into t-space
     double v = 0.;
     while (v < last_d) {
         dss.push_back(v);

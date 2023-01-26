@@ -16,7 +16,7 @@ struct LinePoint {
 class Streamline {
    private:
     std::vector<LinePoint> points;  //!< Points on the streamline.
-    size_t m_id;
+    size_t m_id; //!< The streamline id.
 
    public:
     /// Constructs a streamline from a list of fantom::Vector2.

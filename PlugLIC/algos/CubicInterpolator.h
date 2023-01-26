@@ -47,14 +47,14 @@ class CubicInterpolator {
     /// @returns The evaluated hermite base function coefficients.
     BaseFunctions calc_base(double t) const;
 
-    // Maps the distances listed in `dss` from the Accumulated Distance into the corresponding t-values.
-    // @attention Both `dss` and the lists in the ADF are required to be sorted.
-    // @param dss The list of distances with respect to the start of the interpolation that need mapping into t-space.
-    // @param adf The Accumulated Distance Function which is used to do the mapping.
-    // @returns The list of t-values corresponding to the distance values in `dss`.
+    /// Maps the distances listed in `dss` from the Accumulated Distance into the corresponding t-values.
+    /// @attention Both `dss` and the lists in the ADF are required to be sorted.
+    /// @param dss The list of distances with respect to the start of the interpolation that need mapping into t-space.
+    /// @param adf The Accumulated Distance Function which is used to do the mapping.
+    /// @returns The list of t-values corresponding to the distance values in `dss`.
     std::vector<double> map_ts(const std::vector<double> &dss, const AccDistF &adf) const;
 
-    /// Evaluates the interpolation of the points given in @param iv at location @param t.
+    /// Evaluates the interpolation of the points given in `iv` at location `t`.
     /// @param iv The two points with their derivatives we want to interpolate between.
     /// @param t The location in the interval [0, 1] the interpolation is evaluated at.
     /// @returns The interpolated point.
