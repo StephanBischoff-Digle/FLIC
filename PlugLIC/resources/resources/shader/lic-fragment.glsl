@@ -21,11 +21,6 @@ void main()
     int n = 0;
     float d = .0001;
 
-    if (length(texture(inTexVec, fragTexCoords).rg) < 0.000001) {
-        out_color = vec4(0.);
-        return;
-    }
-
     // forward integration and convolution
     vec2 s0 = fragTexCoords;
     for (int i = 0; i < arc_length / 2.; ++i) {
@@ -47,7 +42,10 @@ void main()
     }
 
     // box-kernel normalization
-    col /= float(n);
-
-    out_color = vec4(vec3(col), 1.);
+    if (n == 0) {
+        out_color = vec4(0., 0., 0., 1.);
+    } else {
+        col /= float(n);
+        out_color = vec4(vec3(col), 1.);
+    }
 }
