@@ -52,87 +52,33 @@ class Integrator : public fantom::DataAlgorithm {
 
         // TODO: Implement stuff
 
-        // std::vector<LIC::DiffPoint> samples;
-        // samples.emplace_back(Vector2 {0., 0.}, Vector2 {1., 1.});
-        // samples.emplace_back(Vector2 {1., 0.5}, Vector2 {1., 1.});
-        // samples.emplace_back(Vector2 {1., 2.}, Vector2 {0., 1.});
-        // samples.emplace_back(Vector2 {0., 1.}, Vector2 {1., 0.});
-        //
-        // LIC::CubicInterpolator ci;
-        // auto ps = ci.interpolate(samples, .1);
+        std::vector<LIC::DiffPoint> samples;
+        samples.emplace_back(Vector2 {0., 0.}, Vector2 {1., 1.});
+        samples.emplace_back(Vector2 {1., 0.5}, Vector2 {1., 1.});
+        samples.emplace_back(Vector2 {1., 2.}, Vector2 {0., 1.});
+        samples.emplace_back(Vector2 {0., 1.}, Vector2 {1., 0.});
 
-        //////////////////////////////////////////////////
-        //// Mock for Streamline Store
-        //////////////////////////////////////////////////
+        LIC::CubicInterpolator ci;
+        auto ps = ci.interpolate(samples, .025);
+        debugLog() << "Generated " << ps.size() << " points" << std::endl;
 
         LIC::StreamlineStore sls;
+        sls.add(ps);
 
-        // construct streamline ps0 list
-        std::vector<fantom::Vector2> ps0;
-        ps0.emplace_back(0., 0.);
-        ps0.emplace_back(1., 0.);
-        ps0.emplace_back(1.5, 0.);
-        ps0.emplace_back(2., 0.);
-        ps0.emplace_back(3., 0.);
-        ps0.emplace_back(4., 0.);
-        ps0.emplace_back(5., 0.);
-
-        // add to streamline store
-        sls.add(ps0);
-
-        // construct streamline ps1 list
-        std::vector<fantom::Vector2> ps1;
-        ps1.emplace_back(0., 1.);
-        ps1.emplace_back(1., 1.);
-        ps1.emplace_back(1.5, 1.);
-        ps1.emplace_back(2., 1.);
-        ps1.emplace_back(3., 1.);
-        ps1.emplace_back(4., 1.);
-        ps1.emplace_back(5., 1.);
-
-        // add to streamline store
-        sls.add(ps1);
-        
-        //////////////////////////////////////////////////
-        //// debugging
-
-        // recover streamline 0
-        auto sl0 = sls.get(ps0[0]);
-        // we need to check if we got a streamline
-        if (sl0) {
-            // print streamline id
-            debugLog() << "id: " << sl0->id() << std::endl;
-
-            // request all points that fall into the interval of size 2. centered around ps0[3]
-            auto sl0_range = sl0->request_range(ps0[3], 2.);
+        auto sl = sls.get(samples[2].p, 0.01);
+        if (sl) {
+            auto conv = sl->request_range(samples[2].p, .3, 0.01);
+            debugLog() << conv.size() << " points in conv" << std::endl;
             debugLog() << "\n";
-            for (auto &p : sl0_range) {
+            for (auto &p : conv) {
                 debugLog() << p->point << "\n";
             }
             debugLog() << std::endl;
-        }
-        // expected:
-        // | id: 0
-        // | [1, 0]
-        // | [1.5, 0]
-        // | [2, 0]         <- center ps0[3]
-        // | [3, 0]
-
-        // recover streamline 1
-        auto sl1 = sls.get(ps1[3]);
-        if (sl1) {
-            // expected to be 1
-            debugLog() << "id: " << sl1->id() << std::endl;
-
-            // check and receive if a point is in the streamline
-            auto p = sl1->contains(ps1[2]);
-            if (p) {
-                // expected to be 1 as well
-                debugLog() << "point on streamline: " << p->streamline_id << std::endl;
-            }
+        } else {
+            debugLog() << "no streamline found" << std::endl;
         }
 
-        //////////////////////////////////////////////////
+       
     }
 
    private:
