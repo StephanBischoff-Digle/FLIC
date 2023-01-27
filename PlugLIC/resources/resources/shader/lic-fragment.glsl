@@ -5,6 +5,7 @@ in vec2 fragTexCoords;
 // NOTE: We might put the noise into the blue channel of the input texture.
 uniform sampler2D inTexVec;         // RG -> XY of vector field
 uniform sampler2D inTexNoise;       // noise (all channels)
+uniform sampler2D inTexScalar;
 
 uniform float arc_length;
 uniform float scale;
@@ -48,5 +49,8 @@ void main()
 
     // box-kernel normalization
     col /= float(n);
-    out_color = vec4(vec3(col), 1.);
+
+    vec4 c_lo = vec4(1., 0., 0., 1.);
+    vec4 c_hi = vec4(0., 0., 1., 1.);
+    out_color = mix(c_lo * col, c_hi * col, texture(inTexScalar, fragTexCoords).r);
 }

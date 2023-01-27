@@ -26,6 +26,7 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
     struct Options : public VisAlgorithm::Options {
         explicit Options(fantom::Options::Control& control) : fantom::VisAlgorithm::Options{control} {
             add<Field<2, Vector2>>("Field", "A 2D vector field", definedOn<Grid<2>>(Grid<2>::Points));
+            add<Field<2, Scalar>>("Scalar", "A 2D Scalar field", definedOn<Grid<2>>(Grid<2>::Points));
             add<float>("DPI", "Dots per unit", 1.);
             add<float>("Arc Length", "Lenght of the convolution", 30.);
             add<float>("Z-Offset", "Z-Offset to fix Z-fighting", 0.);
@@ -36,6 +37,7 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
             addGraphics("LIC");
             addGraphics("Field");
             addGraphics("Noise");
+            addGraphics("Scalar");
         }
     };
 
@@ -89,6 +91,12 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
         std::vector<Color> colors(t_width * t_height);
         std::vector<Color> noise_c(t_width * t_height);
 
+        std::shared_ptr<const Field<2, Scalar>> scalar = options.get<Field<2, Scalar>>("Scalar");
+        std::unique_ptr<FieldEvaluator<2UL, Tensor<double>>> scalar_evaluator = nullptr;
+        if (scalar) scalar_evaluator = scalar->makeEvaluator();
+
+        std::vector<double> scalar_c;
+        scalar_c.resize(t_width * t_height, 1.);
         Progress prog(*this, "sampling texture and noise", t_width * t_height);
 
         // Set colors
@@ -98,6 +106,10 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
                 auto p = px2world(x, y);
                 float n = std::abs(noise.noise(x, y));
                 noise_c[idx] = Color(n, n, n, 1.);
+                if (scalar_evaluator && scalar_evaluator->reset(p)) {
+                    scalar_c[idx] = *(scalar_evaluator->value().begin());
+                }
+
                 if (evaluator->reset(p, 0.)) {
                     auto val = evaluator->value();
                     double v_x = *val.begin();
@@ -113,6 +125,18 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
             }
         }
 
+        if (scalar) {
+            double max = *std::max_element(scalar_c.begin(), scalar_c.end());
+            double min = *std::min_element(scalar_c.begin(), scalar_c.end());
+            std::transform(scalar_c.begin(), scalar_c.end(), scalar_c.begin(),
+                           [&max, &min](double v) { return (v - min) / (max - min); });
+        }
+
+        std::vector<Color> scalar_cols(t_width * t_height);
+        for (size_t i = 0; i < scalar_c.size(); ++i) {
+            scalar_cols[i] = Color(scalar_c[i], scalar_c[i], scalar_c[i], 1.);
+        }
+
         // Generate 2D Texture
         Size2D texture_size{t_width, t_height};
         std::shared_ptr<graphics::Texture2D> tex_vec = system.makeTexture(texture_size, graphics::ColorChannel::RGBA);
@@ -120,6 +144,10 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
 
         std::shared_ptr<graphics::Texture2D> tex_noise = system.makeTexture(texture_size, graphics::ColorChannel::RGBA);
         tex_noise->range(Pos2D(0, 0), texture_size, noise_c);
+
+        std::shared_ptr<graphics::Texture2D> tex_scalar =
+            system.makeTexture(texture_size, graphics::ColorChannel::RGBA);
+        tex_scalar->range(Pos2D(0, 0), texture_size, scalar_cols);
 
         // Set Quad vertecies.
         std::vector<PointF<3>> verticesTex(4);
@@ -156,6 +184,7 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
                                      .uniform("scale", 1 / v_scale)
                                      .texture("inTexVec", tex_vec)
                                      .texture("inTexNoise", tex_noise)
+                                     .texture("inTexScalar", tex_scalar)
                                      .boundingSphere(bs),
                                  system.makeProgramFromFiles(resourcePathLocal + "shader/texture-vertex.glsl",
                                                              resourcePathLocal + "shader/lic-fragment.glsl"));
@@ -180,9 +209,20 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
                                  system.makeProgramFromFiles(resourcePathLocal + "shader/texture-vertex.glsl",
                                                              resourcePathLocal + "shader/texture-fragment.glsl"));
 
+        std::shared_ptr<graphics::Drawable> scalar_tex =
+            system.makePrimitive(graphics::PrimitiveConfig{graphics::RenderPrimitives::TRIANGLES}
+                                     .vertexBuffer("position", system.makeBuffer(verticesTex))
+                                     .vertexBuffer("texCoords", system.makeBuffer(texCoords))
+                                     .indexBuffer(system.makeIndexBuffer(indicesTex))
+                                     .texture("inTexture", tex_scalar)
+                                     .boundingSphere(bs),
+                                 system.makeProgramFromFiles(resourcePathLocal + "shader/texture-vertex.glsl",
+                                                             resourcePathLocal + "shader/texture-fragment.glsl"));
+
         setGraphics("LIC", lic_tex);
         setGraphics("Field", field_tex);
         setGraphics("Noise", noise_tex);
+        setGraphics("Scalar", scalar_tex);
     }
 };
 
