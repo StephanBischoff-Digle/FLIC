@@ -9,4 +9,10 @@ struct DPoint2 {
     std::size_t y;
 };
 
+struct PixelMeta {
+    DPoint2 pix_coord;
+    std::size_t hits;
+    double intensity;
+};
+
 }
