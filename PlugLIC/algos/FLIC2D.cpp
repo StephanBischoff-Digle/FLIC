@@ -1,4 +1,5 @@
 #include <cmath>
+#include <algorithm>
 #include <cstddef>
 #include <fantom/algorithm.hpp>
 #include <fantom/datastructures/DomainFactory.hpp>
@@ -39,7 +40,7 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
         }
     };
     struct VisOutputs : public VisAlgorithm::VisOutputs {
-        VisOutputs(fantom::VisOutputs::Control& control) : VisAlgorithm::VisOutputs(control) { addGraphics("LIC"); }
+        VisOutputs(fantom::VisOutputs::Control& control) : VisAlgorithm::VisOutputs(control) { addGraphics("FLIC"); }
     };
 
     GraphicsTutorialAlgorithm(InitData& data) : VisAlgorithm(data) {}
@@ -72,7 +73,7 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
 
         double dpi = options.get<float>("DPI");
         float v_scale = .5;  // TODO: get max from samples
-        float arc_length = options.get<size_t>("Arc Length");
+        size_t arc_length = options.get<size_t>("Arc Length");
         float z_off = options.get<float>("Z-Offset");
 
         size_t minNumHits = 20;
@@ -99,13 +100,19 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
                 prog++;
             }
         }
+        prog.finalize();
 
         ///////////////////////////////////////////////////////
+        debugLog() << "Start FLIC" << std::endl;
         LIC::TexMeta tex_meta(t_width, t_height);
+
+
+        Progress prog2(*this, "Calculating Points", t_width * t_height);
 
         // FIX: partition into blocks instead of scanlining
         for (size_t y = 0; y < t_height; ++y) {
             for (size_t x = 0; x < t_width; ++x) {
+                prog2++;
                 auto px = tex_meta.pxl({x, y});
                 if (px->hits < minNumHits) {
                     // streamline computaiton
@@ -113,7 +120,12 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
 
                     // convolution
                     double acc = 0;
-                    for (size_t i = ir.idx - arc_length/2; i < ir.idx + arc_length/2; ++i) {
+
+                    size_t n_min = 0;
+                    if (arc_length / 2 < ir.idx) n_min = ir.idx - arc_length / 2;
+                    size_t n_max = std::min(ir.idx + arc_length / 2, ir.streamline.size());
+
+                    for (size_t i = n_min; i < n_max; ++i) {
                         acc += noise_c[noise_idx(ir.streamline[i])].r();
                     }
 
@@ -124,13 +136,19 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
                     double mp = acc;
                     double mn = acc;
                     for (size_t m = 1; m < M; ++m) {
-                        auto p_p = ir.streamline[ir.idx-arc_length/2+m];
-                        auto p_n = ir.streamline[ir.idx-arc_length/2-m];
+                        if (n_max + m > ir.streamline.size() || n_min < m) break;
+                        auto p_p = ir.streamline[n_max + m];        // x_m + 1 + L
+                        auto p_n = ir.streamline[n_min - m];        // x_m - 1 - L
+                        auto p_pn = ir.streamline[n_max + m - 1];   // x_m + L
+                        auto p_nn = ir.streamline[n_min - m + 1];   // x_m - L
                         double i_p = noise_c[noise_idx(p_p)].r();
                         double i_n = noise_c[noise_idx(p_n)].r();
+                        double i_pn = noise_c[noise_idx(p_pn)].r();
+                        double i_nn = noise_c[noise_idx(p_nn)].r();
+                        double k = 1./(n_max - n_min + 1);
 
-                        mp = mp + i_p - i_n;
-                        mn = mn + i_n - i_p;
+                        mp = mp + k * (i_p - i_nn);
+                        mn = mn + k * (i_n - i_pn);
 
                         // update pixels
                         auto p_pxl = tex_meta.pxl(p_p);
@@ -144,6 +162,8 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
                 }
             }
         }
+        prog2.finalize();
+        debugLog() << "Collect Intensities" << std::endl;
 
         std::vector<Color> colors(t_width * t_height);
         auto intensities = tex_meta.normalized_intensities();
@@ -156,9 +176,6 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
         Size2D texture_size{t_width, t_height};
         std::shared_ptr<graphics::Texture2D> tex_vec = system.makeTexture(texture_size, graphics::ColorChannel::RGBA);
         tex_vec->range(Pos2D(0, 0), texture_size, colors);
-
-        std::shared_ptr<graphics::Texture2D> tex_noise = system.makeTexture(texture_size, graphics::ColorChannel::RGBA);
-        tex_noise->range(Pos2D(0, 0), texture_size, noise_c);
 
         // Set Quad vertecies.
         std::vector<PointF<3>> verticesTex(4);
@@ -191,10 +208,7 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
                                      .vertexBuffer("position", system.makeBuffer(verticesTex))
                                      .vertexBuffer("texCoords", system.makeBuffer(texCoords))
                                      .indexBuffer(system.makeIndexBuffer(indicesTex))
-                                     .uniform("arc_length", arc_length)
-                                     .uniform("scale", 1 / v_scale)
-                                     .texture("inTexVec", tex_vec)
-                                     .texture("inTexNoise", tex_noise)
+                                     .texture("inTexture", tex_vec)
                                      .boundingSphere(bs),
                                  system.makeProgramFromFiles(resourcePathLocal + "shader/texture-vertex.glsl",
                                                              resourcePathLocal + "shader/texture-fragment.glsl"));
@@ -211,9 +225,12 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
         auto forward = runge_kutta(p, dpi, eval);
         auto backward = runge_kutta(p, -dpi, eval);
 
-        // reverse backward and drop `p`
-        std::reverse(backward.begin(), backward.end());
-        backward.pop_back();
+        if (backward.size() > 0) {
+            // reverse backward and drop `p`
+            std::reverse(backward.begin(), backward.end());
+            backward.pop_back();
+        }
+
         size_t idx = backward.size();
 
         // concat
@@ -274,5 +291,6 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
     }
 };
 
-AlgorithmRegister<GraphicsTutorialAlgorithm> dummy("A/2D-FLIC", "Renders Fast Line Integral Convolution for 2D Vector Field");
+AlgorithmRegister<GraphicsTutorialAlgorithm> dummy("A/2D-FLIC",
+                                                   "Renders Fast Line Integral Convolution for 2D Vector Field");
 }  // namespace

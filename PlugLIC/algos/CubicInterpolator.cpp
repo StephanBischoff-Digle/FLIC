@@ -62,6 +62,13 @@ std::vector<double> CubicInterpolator::map_ts(const std::vector<double> &dss,
 std::vector<fantom::Vector2> CubicInterpolator::interpolate(const std::vector<DiffPoint> &line,
                                                             const double step_size) const {
     std::vector<Vector2d> r;
+    std::vector<fantom::Vector2> ret;
+    if (line.size() == 0) return ret;
+    if (line.size() == 1) {
+        ret.emplace_back(line[0].p[0], line[0].p[1]);
+        return ret;
+    }
+
     r.emplace_back(line[0].p[0], line[0].p[1]);
 
     // NOTE: Presampling of the curve, such that we can map equally spaced distances into the t-space
@@ -109,7 +116,6 @@ std::vector<fantom::Vector2> CubicInterpolator::interpolate(const std::vector<Di
         }
     }
 
-    std::vector<fantom::Vector2> ret;
     // Remap from Eigen::Vector2d to fantom::Vector2
     std::transform(normalized_r.begin(), normalized_r.end(), std::back_inserter(ret), [&](Vector2d v) {
         return fantom::Vector2{v[0], v[1]};

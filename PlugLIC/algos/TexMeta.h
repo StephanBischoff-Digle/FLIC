@@ -3,6 +3,7 @@
 #include "DPoint2.h"
 
 #include <vector>
+#include <algorithm>
 #include <memory>
 
 namespace LIC {
@@ -30,7 +31,7 @@ public:
     std::vector<double> normalized_intensities() const {
         std::vector<double> intensities(tex.size());
         for (std::size_t i = 0; i < tex.size(); ++i) {
-            intensities[i] = tex[i]->intensity / tex[i]->hits;
+            intensities[i] = std::min(1., std::max(0., tex[i]->intensity / tex[i]->hits));
         }
         return intensities;
     }
