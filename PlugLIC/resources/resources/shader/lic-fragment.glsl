@@ -18,8 +18,13 @@ vec2 tex2vec(vec2 coord) {
 void main()
 {
     float col = texture(inTexNoise, fragTexCoords).r;
-    int n = 0;
+    int n = 1;
     float d = .0001;
+
+    if (texture(inTexVec, fragTexCoords).a < 1.) {
+        out_color = vec4(0.);
+        return;
+    }
 
     // forward integration and convolution
     vec2 s0 = fragTexCoords;
@@ -42,10 +47,6 @@ void main()
     }
 
     // box-kernel normalization
-    if (n == 0) {
-        out_color = vec4(0., 0., 0., 1.);
-    } else {
-        col /= float(n);
-        out_color = vec4(vec3(col), 1.);
-    }
+    col /= float(n);
+    out_color = vec4(vec3(col), 1.);
 }

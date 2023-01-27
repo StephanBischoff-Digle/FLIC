@@ -107,7 +107,7 @@ class GraphicsTutorialAlgorithm : public VisAlgorithm {
                     double g = 0.5 + v_y * v_scale;
                     colors[idx] = Color(r, g, 0., 1.);
                 } else {
-                    colors[idx] = Color(.5, .5, 0., 1.);
+                    colors[idx] = Color(.5, .5, 0., 0.);
                 }
                 prog++;
             }
